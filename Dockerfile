@@ -12,7 +12,6 @@ WORKDIR /app
 # Copy manifest + yarn config first for better layer caching
 COPY package.json yarn.lock .yarnrc.yml ./
 # If you have a .yarn/releases folder (Yarn 4 Berry), copy it too:
-COPY .yarn ./.yarn
 
 RUN yarn install
 
