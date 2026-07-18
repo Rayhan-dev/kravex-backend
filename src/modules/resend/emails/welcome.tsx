@@ -16,7 +16,10 @@ export default function WelcomeEmail({
   const firstName = customer.first_name || 'there';
 
   return (
-    <EmailLayout {...emailLayoutProps}>
+    <EmailLayout
+      previewText="Your Kravex account is ready — explore anime & game katanas, delivered across Bangladesh."
+      {...emailLayoutProps}
+    >
       <Heading
         className="text-ink mt-0 mb-8 font-semibold"
         style={{ fontSize: '26px', letterSpacing: '-0.01em', fontWeight: 600 }}

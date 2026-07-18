@@ -5,6 +5,7 @@ import {
   Modules,
 } from '@medusajs/framework/utils';
 import type { OrderPlacedEmailProps } from '../modules/resend/emails/order-placed';
+import type { OrderMemoEmailProps } from '../modules/resend/emails/order-memo';
 
 type Country = {
   iso_2: string;
@@ -71,6 +72,8 @@ export default async function sendOrderConfirmationHandler({
     entity: 'order',
     fields: [
       'id',
+      'display_id',
+      'created_at',
       'currency_code',
       'total',
       'subtotal',
@@ -162,11 +165,6 @@ export default async function sendOrderConfirmationHandler({
     id: item.id,
     quantity: Math.trunc(toNumber(item.quantity)),
     total: toNumber(item.total),
-    thumbnail:
-      item.thumbnail ??
-      item.product.thumbnail ??
-      item.product.images?.[0]?.url ??
-      null,
     product_title: item.product_title ?? '',
     variant_title: item.variant_title ?? '',
     variant_option_values: buildVariantOptionValues(item),
@@ -188,6 +186,14 @@ export default async function sendOrderConfirmationHandler({
     channel: 'email',
     template: 'order-placed',
     data: { order: orderForEmail } satisfies OrderPlacedEmailProps,
+  });
+
+  // Internal fulfillment memo/receipt — printable copy for the fulfillment provider.
+  await notificationModuleService.createNotifications({
+    to: 'kravex.store@gmail.com',
+    channel: 'email',
+    template: 'order-memo',
+    data: { order: orderForEmail } satisfies OrderMemoEmailProps,
   });
 }
 

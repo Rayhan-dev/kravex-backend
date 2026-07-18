@@ -11,7 +11,7 @@ import {
 import { HttpTypes } from '@medusajs/framework/types';
 import EmailLayout, { EmailLayoutProps } from './components/EmailLayout';
 
-export type OrderPlacedEmailProps = {
+export type OrderMemoEmailProps = {
   order: Pick<
     HttpTypes.AdminOrder,
     | 'currency_code'
@@ -22,6 +22,7 @@ export type OrderPlacedEmailProps = {
     | 'tax_total'
   > & {
     display_id: string | number;
+    created_at?: string | Date;
     shipping_address:
       | (Pick<
           HttpTypes.AdminOrderAddress,
@@ -52,15 +53,22 @@ export type OrderPlacedEmailProps = {
   };
 } & EmailLayoutProps;
 
-export default function OrderPlacedEmail({
+export default function OrderMemoEmail({
   order,
   ...emailLayoutProps
-}: OrderPlacedEmailProps) {
+}: OrderMemoEmailProps) {
   const formatter = new Intl.NumberFormat('en-BD', {
     style: 'currency',
     currencyDisplay: 'narrowSymbol',
     currency: order.currency_code.toUpperCase(),
   });
+
+  const orderDate = order.created_at
+    ? new Date(order.created_at).toLocaleString('en-BD', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      })
+    : '';
 
   const fullName = [
     order.shipping_address?.first_name,
@@ -69,67 +77,112 @@ export default function OrderPlacedEmail({
     .filter(Boolean)
     .join(' ');
 
-  const addressLine = [
+  const addressLines = [
     order.shipping_address?.address_1,
     order.shipping_address?.address_2,
-    order.shipping_address?.city,
-    order.shipping_address?.country?.display_name,
-  ]
-    .filter(Boolean)
-    .join(', ');
+    [order.shipping_address?.city, order.shipping_address?.province]
+      .filter(Boolean)
+      .join(', '),
+    [
+      order.shipping_address?.postal_code,
+      order.shipping_address?.country?.display_name,
+    ]
+      .filter(Boolean)
+      .join(' '),
+  ].filter(Boolean);
+
+  const totalQuantity = order.items.reduce(
+    (sum, item) => sum + item.quantity,
+    0,
+  );
 
   return (
     <EmailLayout
-      previewText={`Thanks for your order #${order.display_id} — we've received it and it's being prepared.`}
+      previewText={`Fulfillment memo — order #${order.display_id}`}
       {...emailLayoutProps}
     >
       <Heading
-        className="text-ink mt-0 mb-6 font-semibold"
-        style={{ fontSize: '26px', letterSpacing: '-0.01em', fontWeight: 600 }}
+        className="text-ink mt-0 mb-2 font-semibold"
+        style={{ fontSize: '24px', letterSpacing: '-0.01em', fontWeight: 600 }}
       >
-        Order confirmed.
+        Fulfillment memo
       </Heading>
 
-      <Text className="text-md text-ink !mb-4">
-        Your order <strong>#{order.display_id}</strong> has been received and is
-        being prepared.
-      </Text>
-
-      <Text className="text-md text-ink !mb-10">
-        We'll send you another email when your order ships.
-      </Text>
-
-      {/* ── Delivery address ── */}
-      {order.shipping_address && (
-        <Section
-          className="mb-6 p-4 border border-solid border-border"
-          style={{ borderRadius: '2px' }}
-        >
-          <Text
-            className="text-xs text-muted !mt-0 !mb-3"
-            style={{ textTransform: 'uppercase', letterSpacing: '0.12em' }}
-          >
-            Delivery address
+      <Row className="mb-8">
+        <Column>
+          <Text className="text-sm text-ink m-0">
+            Order <strong>#{order.display_id}</strong>
           </Text>
-          {fullName && (
-            <Text className="text-base text-ink m-0 leading-tight">{fullName}</Text>
+          {orderDate && (
+            <Text className="text-xs text-muted m-0">{orderDate}</Text>
           )}
-          {addressLine && (
-            <Text className="text-base text-ink m-0 leading-tight">{addressLine}</Text>
-          )}
-          {order.shipping_address.phone && (
-            <Text className="text-base text-ink m-0 leading-tight">
-              {order.shipping_address.phone}
-            </Text>
-          )}
-        </Section>
-      )}
+        </Column>
+      </Row>
 
-      {/* ── Order items ── */}
+      {/* ── Ship to ── */}
+      <Section
+        className="mb-6 p-4 border border-solid border-border"
+        style={{ borderRadius: '2px' }}
+      >
+        <Text
+          className="text-xs text-muted !mt-0 !mb-3"
+          style={{ textTransform: 'uppercase', letterSpacing: '0.12em' }}
+        >
+          Ship to
+        </Text>
+        {fullName && (
+          <Text className="text-base text-ink m-0 leading-tight font-semibold">
+            {fullName}
+          </Text>
+        )}
+        {addressLines.map((line, index) => (
+          <Text key={index} className="text-base text-ink m-0 leading-tight">
+            {line}
+          </Text>
+        ))}
+        {order.shipping_address?.phone && (
+          <Text className="text-base text-ink m-0 leading-tight">
+            Phone: {order.shipping_address.phone}
+          </Text>
+        )}
+        {order.email && (
+          <Text className="text-base text-ink m-0 leading-tight">
+            Email: {order.email}
+          </Text>
+        )}
+      </Section>
+
+      {/* ── Items to pick ── */}
       <Section
         className="border border-solid border-border mb-6"
         style={{ borderRadius: '2px' }}
       >
+        <Row className="py-3 px-4 border-b border-solid border-border">
+          <Column>
+            <Text
+              className="text-xs text-muted m-0"
+              style={{ textTransform: 'uppercase', letterSpacing: '0.12em' }}
+            >
+              Item
+            </Text>
+          </Column>
+          <Column style={{ width: '60px', textAlign: 'center' }}>
+            <Text
+              className="text-xs text-muted m-0"
+              style={{ textTransform: 'uppercase', letterSpacing: '0.12em' }}
+            >
+              Qty
+            </Text>
+          </Column>
+          <Column style={{ width: '100px', textAlign: 'right' }}>
+            <Text
+              className="text-xs text-muted m-0"
+              style={{ textTransform: 'uppercase', letterSpacing: '0.12em' }}
+            >
+              Amount
+            </Text>
+          </Column>
+        </Row>
         {order.items.map((item, index) => (
           <Fragment key={item.id}>
             {index > 0 && (
@@ -144,18 +197,36 @@ export default function OrderPlacedEmail({
                   ([key, value]) =>
                     typeof value === 'string'
                       ? [
-                          <Text key={key} className="text-xs text-muted !m-0 !mb-0.5">
+                          <Text
+                            key={key}
+                            className="text-xs text-muted !m-0 !mb-0.5"
+                          >
                             {key}: {value}
                           </Text>,
                         ]
                       : [],
                 )}
-                <Text className="text-xs text-muted !m-0 !mt-1">
-                  Qty: {item.quantity}
+              </Column>
+              <Column
+                style={{
+                  width: '60px',
+                  textAlign: 'center',
+                  verticalAlign: 'top',
+                }}
+              >
+                <Text className="text-base text-ink m-0 font-semibold">
+                  {item.quantity}
                 </Text>
               </Column>
-              <Column style={{ verticalAlign: 'bottom', textAlign: 'right', whiteSpace: 'nowrap' }}>
-                <Text className="text-base text-ink m-0 font-semibold">
+              <Column
+                style={{
+                  width: '100px',
+                  textAlign: 'right',
+                  verticalAlign: 'top',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <Text className="text-base text-ink m-0">
                   {formatter.format(item.total)}
                 </Text>
               </Column>
@@ -164,11 +235,19 @@ export default function OrderPlacedEmail({
         ))}
       </Section>
 
-      {/* ── Order totals ── */}
+      {/* ── Totals ── */}
       <Section
         className="border border-solid border-border p-4 mb-2"
         style={{ borderRadius: '2px' }}
       >
+        <Row className="mb-2">
+          <Column>
+            <Text className="text-sm text-muted m-0">Total items</Text>
+          </Column>
+          <Column style={{ textAlign: 'right' }}>
+            <Text className="text-sm text-ink m-0">{totalQuantity}</Text>
+          </Column>
+        </Row>
         <Row className="mb-2">
           <Column>
             <Text className="text-sm text-muted m-0">Subtotal</Text>
@@ -211,16 +290,17 @@ export default function OrderPlacedEmail({
         )}
       </Section>
 
-      <Text className="text-sm text-muted mt-8 m-0">
-        Thank you for choosing Kravex.
+      <Text className="text-xs text-muted mt-8 m-0">
+        Internal fulfillment copy — order #{order.display_id}.
       </Text>
     </EmailLayout>
   );
 }
 
-OrderPlacedEmail.PreviewProps = {
+OrderMemoEmail.PreviewProps = {
   order: {
     display_id: 1042,
+    created_at: new Date(),
     currency_code: 'bdt',
     email: 'rayhan@example.com',
     shipping_address: {
@@ -229,14 +309,14 @@ OrderPlacedEmail.PreviewProps = {
       address_1: 'Road 12, House 5, Dhanmondi',
       address_2: '',
       city: 'Dhaka',
-      postal_code: '',
+      postal_code: '1209',
+      province: 'Dhaka',
       country: {
         iso_2: 'bd',
         name: 'Bangladesh',
         display_name: 'Bangladesh',
       },
       phone: '+880 17XX XXX XXX',
-      province: '',
     },
     items: [
       {
@@ -256,4 +336,4 @@ OrderPlacedEmail.PreviewProps = {
     total: 4500,
     tax_total: 0,
   },
-} satisfies OrderPlacedEmailProps;
+} satisfies OrderMemoEmailProps;

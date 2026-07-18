@@ -22,7 +22,10 @@ export default function OrderUpdateEmail({
   }/account/my-orders/${order.id}`;
 
   return (
-    <EmailLayout {...emailLayoutProps}>
+    <EmailLayout
+      previewText={`Order #${order.display_id} has shipped — track your Kravex delivery.`}
+      {...emailLayoutProps}
+    >
       <Heading
         className="text-ink mt-0 mb-8 font-semibold"
         style={{ fontSize: '26px', letterSpacing: '-0.01em', fontWeight: 600 }}

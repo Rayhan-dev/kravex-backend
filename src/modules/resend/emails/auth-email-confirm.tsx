@@ -17,7 +17,10 @@ export default function AuthEmailConfirm({
   const firstName = customer?.first_name || 'there';
 
   return (
-    <EmailLayout {...emailLayoutProps}>
+    <EmailLayout
+      previewText="Confirm your email to activate your Kravex account."
+      {...emailLayoutProps}
+    >
       <Heading
         className="text-ink mt-0 mb-8 font-semibold"
         style={{ fontSize: '26px', letterSpacing: '-0.01em', fontWeight: 600 }}

@@ -24,7 +24,10 @@ export default function AuthPasswordForgotResetEmail({
   )}&token=${encodeURIComponent(token)}`;
 
   return (
-    <EmailLayout {...emailLayoutProps}>
+    <EmailLayout
+      previewText="Reset your Kravex password — this link expires in 24 hours."
+      {...emailLayoutProps}
+    >
       <Heading
         className="text-ink mt-0 mb-8 font-semibold"
         style={{ fontSize: '26px', letterSpacing: '-0.01em', fontWeight: 600 }}

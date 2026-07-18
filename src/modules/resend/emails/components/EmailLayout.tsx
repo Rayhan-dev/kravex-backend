@@ -8,6 +8,7 @@ import {
   Hr,
   Html,
   Link,
+  Preview,
   Row,
   Section,
   Text,
@@ -17,6 +18,8 @@ import {
 export type EmailLayoutProps = {
   siteTitle?: string;
   companyName?: string;
+  /** Short snippet shown next to the subject line in the inbox. */
+  previewText?: string;
   footerLinks?: {
     url: string;
     label: string;
@@ -33,6 +36,7 @@ export default function EmailLayout(
 
   return (
     <Html>
+      {props.previewText ? <Preview>{props.previewText}</Preview> : null}
       <Head>
         <Font
           fontFamily="Inter"
