@@ -18,6 +18,7 @@ export type OrderPlacedEmailProps = {
     | 'email'
     | 'shipping_total'
     | 'subtotal'
+    | 'discount_total'
     | 'total'
     | 'tax_total'
   > & {
@@ -179,6 +180,18 @@ export default function OrderPlacedEmail({
             </Text>
           </Column>
         </Row>
+        {order.discount_total > 0 && (
+          <Row className="mb-2">
+            <Column>
+              <Text className="text-sm text-muted m-0">Discount</Text>
+            </Column>
+            <Column style={{ textAlign: 'right' }}>
+              <Text className="text-sm text-ink m-0">
+                - {formatter.format(order.discount_total)}
+              </Text>
+            </Column>
+          </Row>
+        )}
         <Row className="mb-4">
           <Column>
             <Text className="text-sm text-muted m-0">Shipping</Text>
@@ -252,7 +265,8 @@ OrderPlacedEmail.PreviewProps = {
       },
     ],
     shipping_total: 120,
-    subtotal: 4380,
+    subtotal: 4880,
+    discount_total: 500,
     total: 4500,
     tax_total: 0,
   },

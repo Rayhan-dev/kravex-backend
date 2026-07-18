@@ -172,8 +172,11 @@ export default async function sendOrderConfirmationHandler({
 
   const orderForEmail = {
     ...order,
-    subtotal: toNumber(order.subtotal),
+    // `order.subtotal` includes shipping, so use `item_subtotal` to show products
+    // only. Shipping is listed on its own line and rolled into the Total.
+    subtotal: toNumber(order.item_subtotal),
     shipping_total: toNumber(order.shipping_total),
+    discount_total: toNumber(order.discount_total),
     total: toNumber(order.total),
     tax_total: toNumber(order.tax_total),
     shipping_address: shippingAddressForEmail,
