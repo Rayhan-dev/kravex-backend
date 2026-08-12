@@ -1,0 +1,26 @@
+# Dependencies & build output — reinstalled/rebuilt inside the image
+node_modules
+.medusa
+dist
+
+# Yarn resolution cache — not needed to install
+.yarn/install-state.gz
+
+# VCS & editor
+.git
+.gitignore
+.vscode
+
+# Secrets & local env — injected at runtime, must never be baked into the image
+.env
+.env.local
+.env.test
+
+# Tests & logs
+integration-tests
+*.log
+
+# Docker files themselves
+Dockerfile
+.dockerignore
+docker-compose.yml
