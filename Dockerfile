@@ -63,14 +63,14 @@ RUN corepack enable
 WORKDIR /app
 
 COPY package.json yarn.lock .yarnrc.yml ./
-RUN yarn install --immutable
+RUN yarn install
 
 COPY . .
 RUN yarn build
 
 # Medusa v2 builds a standalone server into .medusa/server
 WORKDIR /app/.medusa/server
-RUN yarn install --immutable
+RUN yarn install
 
 # ---- runtime stage ----
 FROM node:22-slim AS runner
