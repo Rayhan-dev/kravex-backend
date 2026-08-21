@@ -54,38 +54,88 @@
 # ------------------------------------------------------- new!!!
 
 # ---- build stage ----
+# FROM node:22-slim AS builder
+
+# RUN apt-get update && apt-get install -y --no-install-recommends \
+#     python3 build-essential && rm -rf /var/lib/apt/lists/*
+
+# RUN corepack enable
+# WORKDIR /app
+
+# COPY package.json yarn.lock .yarnrc.yml ./
+# RUN yarn install
+
+# COPY . .
+# RUN yarn build
+
+# # Medusa v2 builds a standalone server into .medusa/server
+# WORKDIR /app/.medusa/server
+# RUN yarn install
+
+# # ---- runtime stage ----
+# FROM node:22-slim AS runner
+
+# ENV NODE_ENV=production
+# RUN corepack enable
+
+# # non-root user
+# RUN useradd -m medusa
+
+# WORKDIR /app
+# COPY --from=builder /app/.medusa/server ./
+# RUN chown -R medusa:medusa /app
+
+# USER medusa
+
+# EXPOSE 9000
+# CMD ["sh", "-c", "yarn medusa db:migrate && yarn start"]
+
+
+
+
+
+
+
+
+# -------------------------- another new -------------------
 FROM node:22-slim AS builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 build-essential && rm -rf /var/lib/apt/lists/*
+    python3 \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN corepack enable
+RUN corepack enable && corepack prepare yarn@4.7.0 --activate
+
 WORKDIR /app
 
 COPY package.json yarn.lock .yarnrc.yml ./
-RUN yarn install
+RUN yarn install --immutable
 
 COPY . .
+
 RUN yarn build
 
-# Medusa v2 builds a standalone server into .medusa/server
 WORKDIR /app/.medusa/server
-RUN yarn install
+RUN yarn install --immutable
 
-# ---- runtime stage ----
+
 FROM node:22-slim AS runner
 
 ENV NODE_ENV=production
-RUN corepack enable
 
-# non-root user
+RUN corepack enable && corepack prepare yarn@4.7.0 --activate
+
 RUN useradd -m medusa
 
 WORKDIR /app
+
 COPY --from=builder /app/.medusa/server ./
+
 RUN chown -R medusa:medusa /app
 
 USER medusa
 
 EXPOSE 9000
-CMD ["sh", "-c", "yarn medusa db:migrate && yarn start"]
+
+CMD ["sh", "-c", "./node_modules/.bin/medusa db:migrate && ./node_modules/.bin/medusa start"]
