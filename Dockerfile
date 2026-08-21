@@ -100,6 +100,9 @@
 # -------------------------- another new -------------------
 FROM node:22-slim AS builder
 
+ARG BACKEND_URL
+ENV BACKEND_URL=$BACKEND_URL
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     build-essential \
@@ -110,6 +113,7 @@ RUN corepack enable && corepack prepare yarn@4.7.0 --activate
 WORKDIR /app
 
 COPY package.json yarn.lock .yarnrc.yml ./
+
 RUN yarn install --immutable
 
 COPY . .
