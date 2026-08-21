@@ -136,6 +136,6 @@ RUN chown -R medusa:medusa /app
 
 USER medusa
 
-EXPOSE 9000
+EXPOSE 8080
 
 CMD ["sh", "-c", "./node_modules/.bin/medusa db:migrate && ./node_modules/.bin/medusa start"]
