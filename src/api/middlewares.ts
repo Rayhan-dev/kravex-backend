@@ -10,14 +10,14 @@ export default defineMiddlewares([
     matcher: '/store/custom/customer/*',
     middlewares: [authenticate('customer', ['session', 'bearer'])],
   },
-  {
-      matcher: "/product-feed",
-      methods: ["GET"],
-      middlewares: [
-        validateAndTransformQuery(z.object({
-          currency_code: z.string(),
-          country_code: z.string(),
-        }), {}),
-      ],
-    },
+  // {
+  //     matcher: "/product-feed",
+  //     methods: ["GET"],
+  //     middlewares: [
+  //       validateAndTransformQuery(z.object({
+  //         currency_code: z.string(),
+  //         country_code: z.string(),
+  //       }), {}),
+  //     ],
+  //   },
 ]);
