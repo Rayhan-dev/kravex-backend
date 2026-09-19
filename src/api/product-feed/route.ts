@@ -1,5 +1,5 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import generateProductFeedWorkflow from "src/workflows/generate-prodcut-feed"
+import generateProductFeedWorkflow from "src/workflows/generate-product-feed.ts"
 
 export async function GET(
   req: MedusaRequest, 
