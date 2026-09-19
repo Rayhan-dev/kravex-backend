@@ -33,6 +33,7 @@ type StepInput = {
 export const getProductFeedItemsStep = createStep(
   "get-product-feed-items", 
   async (input: StepInput, { container }) => {
+    // ...
     const feedItems: FeedItem[] = []
 const query = container.resolve(ContainerRegistrationKeys.QUERY)
 const configModule = container.resolve(
@@ -87,9 +88,52 @@ do {
   offset += limit
 
   // TODO prepare feed data
+  for (const product of products) {
+  if (!product.variants.length) {continue}
+  const salesChannel = product.sales_channels?.find((channel) => {
+    return channel?.stock_locations?.some((location) => {
+      return location?.address?.country_code.toLowerCase() === countryCode
+    })
+  })
+
+  const availability = salesChannel?.id ? await getVariantAvailability(query, {
+    variant_ids: product.variants.map((variant) => variant.id),
+    sales_channel_id: salesChannel?.id,
+  }) : undefined
+
+  for (const variant of product.variants) {
+    // @ts-ignore
+    const calculatedPrice = variant.calculated_price as CalculatedPriceSet
+    const hasOriginalPrice = calculatedPrice?.original_amount && 
+      calculatedPrice.original_amount !== calculatedPrice.calculated_amount
+    const originalPrice = hasOriginalPrice ? calculatedPrice.original_amount : 
+    calculatedPrice.calculated_amount
+    const salePrice = hasOriginalPrice ? calculatedPrice.calculated_amount : 
+      undefined
+    const stockStatus = !variant.manage_inventory ? "in stock" : 
+      !availability?.[variant.id]?.availability ? "out of stock" : "in stock"
+
+    feedItems.push({
+      id: variant.id,
+      title: product.title,
+      description: product.description ?? "",
+      link: `${storefrontUrl || ""}/${input.country_code}/${product.handle}`,
+      image_link: product.thumbnail ?? "",
+      additional_image_link: product.images?.map(
+        (image) => image.url
+      )?.join(","),
+      availability: stockStatus,
+      price: formatPrice(originalPrice as number, currencyCode),
+      sale_price: salePrice ? formatPrice(salePrice as number, currencyCode) : 
+        undefined,
+      item_group_id: product.id,
+      condition: "new", // TODO add condition if supported
+      brand: "", // TODO add brand if supported
+    })
+  }
+}
 } while (count > offset)
 
 return new StepResponse({ items: feedItems })
-    
   }
 )
