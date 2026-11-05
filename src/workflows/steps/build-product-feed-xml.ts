@@ -19,7 +19,7 @@ export const buildProductFeedXmlStep = createStep(
     const itemsXml = input.items.map((item) => {
       return (
         `<item>` +
-          `<g:id>${escape(item.id)}</g:id>` +
+          `<g:id>${escape(item.item_group_id)}</g:id>` +
           `<title>${escape(item.title)}</title>` +
           `<description>${escape(item.description)}</description>` +
           `<link>${escape(item.link)}</link>` +
