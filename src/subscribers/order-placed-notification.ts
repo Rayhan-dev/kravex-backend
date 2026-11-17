@@ -6,6 +6,7 @@ import {
 } from '@medusajs/framework/utils';
 import type { OrderPlacedEmailProps } from '../modules/resend/emails/order-placed';
 import type { OrderMemoEmailProps } from '../modules/resend/emails/order-memo';
+import { sendMetaPurchase } from '../lib/meta-conversions';
 
 type Country = {
   iso_2: string;
@@ -108,6 +109,13 @@ export default async function sendOrderConfirmationHandler({
 
   if (!order || !order.email) {
     return;
+  }
+
+  try {
+    await sendMetaPurchase(order);
+  } catch (error) {
+    // Analytics must never prevent the order confirmation email from being sent.
+    console.error('Meta CAPI Purchase failed', error);
   }
 
   const countryCodes = [
